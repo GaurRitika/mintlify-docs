@@ -1,0 +1,95 @@
+---
+title: "Mydva (AyurGuide): Your AI-Powered Ayurvedic Health Platform"
+sidebarTitle: "Introduction"
+description: "Discover Mydva — the platform that blends ancient Ayurvedic wisdom with AI Dosha analysis, immersive 3D exploration, and live expert video consultations."
+---
+
+Mydva (AyurGuide) brings five thousand years of Ayurvedic science into your daily wellness routine. Instead of one-size-fits-all health advice, you receive a personalised picture of your unique biological constitution — your **Prakriti** — and a complete toolkit to act on it. From an AI-powered Dosha quiz to interactive 3D visualisations of medicinal herbs and chakra energy systems, right through to live video calls with certified Ayurvedic practitioners, every feature on the platform is designed around *you*.
+
+## What Mydva Is
+
+Mydva is a full-stack digital health platform that digitises the traditional Ayurvedic framework and supercharges it with modern technology. At its core, the platform analyses your physical characteristics, digestion patterns, sleep quality, and mental tendencies to compute your exact **Vata / Pitta / Kapha** percentage distribution. It then uses that profile to generate bespoke dietary plans, herbal recommendations, and daily routine guidance — all powered by a state-of-the-art large language model.
+
+Beyond analysis, Mydva gives you an immersive environment to *learn*: explore medicinal plants rendered in interactive 3D, journey through the seven chakra energy centres, and discover Ayurvedic wellness centres near you. When you need a human expert, the built-in telehealth module lets you book and attend a live video consultation with a verified Ayurvedic doctor without ever leaving the platform.
+
+## The Three Pillars
+
+### 1 · AI Dosha Analysis
+
+The Dosha engine processes a multi-dimensional questionnaire covering physiology, digestion, sleep, and emotional patterns. A dynamic scoring algorithm returns precise percentage breakdowns for each of the three doshas — Vata, Pitta, and Kapha — and identifies your primary and secondary constitution. The Groq Llama 3.3 (70B) model then uses those results, combined with your personal health history and current symptoms, to generate a fully tailored Ayurvedic health strategy.
+
+### 2 · 3D Herbal & Chakra Exploration
+
+An interactive 3D herbal remedies explorer, built with React Three Fiber and Three.js, lets you examine medicinal plants in detail — including botanical names, active constituents, doshic impacts, and traditional preparation methods. A separate 3D chakra system guides you through each of the seven energy centres with meditation assistance, mantra audio, mudra visualisations, and breathing rhythm guides.
+
+### 3 · Live Expert Video Consultations
+
+Mydva's telehealth module connects you with certified Ayurvedic doctors for real-time video consultations via WebRTC. You can browse practitioner availability, book appointment slots, and attend sessions — all within the platform. Medical records and prescriptions are stored centrally so your care history is always at hand.
+
+## Who Mydva Is For
+
+- **Wellness seekers** who want actionable, personalised health guidance rooted in Ayurvedic tradition rather than generic advice.
+- **People managing chronic conditions** who want a holistic perspective to complement their existing care.
+- **Yoga and meditation practitioners** looking to deepen their understanding of chakras, herbs, and daily Ayurvedic routine (Dinacharya).
+- **Curious learners** who want a rich, interactive educational resource on Ayurvedic botany, nutrition, and philosophy.
+- **Anyone frustrated by one-size-fits-all health apps** who wants a platform that starts with *their* constitution and works outward.
+
+## Key Benefits
+
+| Benefit | What it means for you |
+|---|---|
+| **Personalised Prakriti profile** | Understand your exact Vata / Pitta / Kapha balance with percentage precision |
+| **AI-generated health strategy** | Receive dietary, herbal, and routine recommendations tailored to your unique profile and symptoms |
+| **Immersive 3D learning** | Explore herbs and chakras as interactive 3D objects — not flat images |
+| **Expert access on demand** | Book a live video consultation with a verified Ayurvedic doctor in minutes |
+| **Unified wellness record** | All your analysis results, consultations, and prescriptions in one place |
+| **Geolocation centre finder** | Discover authentic Ayurvedic clinics and Panchakarma centres near you |
+
+<Tip>
+Your Dosha profile is not a diagnosis — it is a starting point. Use the AI consultation to translate your profile into practical daily habits, and book an expert call whenever you want a professional's perspective.
+</Tip>
+
+## Your Journey on Mydva
+
+The diagram below shows the high-level flow from the moment you sign up to your first personalised health strategy and beyond.
+
+```mermaid
+flowchart LR
+    A([🌿 Register]) --> B([📋 Dosha Quiz])
+    B --> C([🤖 AI Consultation])
+    C --> D([🌱 Herbal / Chakra\nExplorer])
+    D --> E([🎥 Expert Video Call])
+
+    style A fill:#4A6741,color:#fff,stroke:#2F442A
+    style B fill:#7B9971,color:#fff,stroke:#4A6741
+    style C fill:#C17F59,color:#fff,stroke:#8B5E3C
+    style D fill:#7B9971,color:#fff,stroke:#4A6741
+    style E fill:#4A6741,color:#fff,stroke:#2F442A
+```
+
+1. **Register** — create your free account with your name, email, and password.
+2. **Dosha Quiz** — answer the multi-dimensional questionnaire; the AI engine calculates your Vata / Pitta / Kapha breakdown.
+3. **AI Consultation** — submit your health history and symptoms to receive a custom dietary plan, herbal suggestions, and routine modifications.
+4. **Herbal / Chakra Explorer** — browse the 3D plant and chakra library to deepen your understanding of your recommendations.
+5. **Expert Video Call** — schedule a live session with a certified practitioner whenever you want a human perspective.
+
+<Note>
+All protected features — the Dosha quiz, consultation, 3D explorer, and video calls — require you to be logged in. Registration takes under a minute and is completely free.
+</Note>
+
+## Explore Further
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Create your account, get your JWT token, and run your first Dosha analysis in under five minutes.
+  </Card>
+  <Card title="Understanding Doshas" icon="leaf" href="/concepts/doshas">
+    Learn the Ayurvedic science behind Vata, Pitta, and Kapha — and what your profile means for your health.
+  </Card>
+  <Card title="Dosha Analysis Guide" icon="flask" href="/guides/dosha-analysis">
+    A step-by-step guide to getting the most accurate results from the Dosha questionnaire.
+  </Card>
+  <Card title="Auth API Reference" icon="key" href="/api/auth/register">
+    Full reference for the registration and login endpoints, including request shapes and error codes.
+  </Card>
+</CardGroup>

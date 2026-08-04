@@ -1,47 +1,367 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Mydva in 5 Minutes"
+sidebarTitle: "Quick Start"
+description: "Register, log in, run your first AI Dosha analysis, and get a personalised Ayurvedic consultation — all in five minutes with real API examples."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
+You do not need to install anything to start using Mydva. The entire platform is accessible through your browser, and the API is available right now at the base URLs below. This guide walks you through every step — from creating your account to receiving your first AI-generated Ayurvedic health strategy — with copy-paste cURL and JavaScript examples at each stage.
 
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+**Base URLs**
 
-## Prerequisites
+| Service | URL |
+|---|---|
+| Auth (register / login) | `https://dva-mybackend-deployment.onrender.com` |
+| AI & Analytics (Dosha / consultation) | `https://dva-mybackend-deployment.onrender.com/api/v1` |
 
-Before you begin, you must have:
+<Note>
+All requests to the Auth service expect and return `Content-Type: application/json`. The AI endpoints follow the same convention. Make sure you include the `Content-Type: application/json` header in every request.
+</Note>
 
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
+## Auth & First Analysis Flow
 
-## Get started
+The diagram below shows exactly what happens under the hood during the steps that follow.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as You
+    participant A as Auth Backend
+    participant AI as AI Backend
+
+    U->>A: POST /auth/register (FullName, email, password)
+    A-->>U: 200 OK · user object
+
+    U->>A: POST /auth/login (email, password)
+    A-->>U: 200 OK · JWT token + HTTP-only cookie
+
+    U->>AI: POST /api/v1/analyze-dosha (characteristics) + Bearer token
+    AI-->>U: Vata / Pitta / Kapha percentages + primary dosha
+
+    U->>AI: POST /api/v1/personal-consultation (health data) + Bearer token
+    AI-->>U: Custom dietary plan, herbal suggestions, routine advice
+```
+
+---
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
 
-    ```bash
-    npm install your-package
-    ```
-  </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+### Create Your Account
 
-    ```bash
-    your-cli init
-    ```
-  </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+Send a `POST` request to `/auth/register` with your full name, email address, and a password. The server hashes your password with bcrypt before storing it — your plain-text password never persists in the database.
 
-    ```bash
-    your-cli start
-    ```
-  </Step>
-</Steps>
+**Request body**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `FullName` | string | ✅ | Your display name (e.g. `"Priya Sharma"`) |
+| `email` | string | ✅ | A valid email address |
+| `password` | string | ✅ | A strong password of your choice |
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://dva-mybackend-deployment.onrender.com/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "FullName": "Priya Sharma",
+    "email": "priya@example.com",
+    "password": "SecurePass@123"
+  }'
+```
+
+```javascript JavaScript (fetch)
+const response = await fetch(
+  "https://dva-mybackend-deployment.onrender.com/auth/register",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      FullName: "Priya Sharma",
+      email: "priya@example.com",
+      password: "SecurePass@123",
+    }),
+  }
+);
+
+const data = await response.json();
+console.log(data);
+```
+
+</CodeGroup>
+
+**Successful response** (`200 OK`)
+
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "user": {
+    "_id": "665f1a2b3c4d5e6f7a8b9c0d",
+    "FullName": "Priya Sharma",
+    "email": "priya@example.com"
+  }
+}
+```
+
+<Warning>
+If you try to register with an email address that already exists, the API returns `400 Bad Request` with `"User already exists, please login"`. Use the login endpoint instead.
+</Warning>
+
+---
+
+### Log In and Get Your JWT Token
+
+Once your account is created, log in with your email and password. The server returns a signed **JSON Web Token (JWT)** both in the response body and as an HTTP-only cookie. Save the token — you will include it as a `Bearer` token in all subsequent requests to the AI backend.
+
+**Request body**
+
+| Field | Type | Required |
+|---|---|---|
+| `email` | string | ✅ |
+| `password` | string | ✅ |
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://dva-mybackend-deployment.onrender.com/auth/login \
+  -H "Content-Type: application/json" \
+  -c cookies.txt \
+  -d '{
+    "email": "priya@example.com",
+    "password": "SecurePass@123"
+  }'
+```
+
+```javascript JavaScript (fetch)
+const response = await fetch(
+  "https://dva-mybackend-deployment.onrender.com/auth/login",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include", // sends and stores the HTTP-only cookie
+    body: JSON.stringify({
+      email: "priya@example.com",
+      password: "SecurePass@123",
+    }),
+  }
+);
+
+const { token, user } = await response.json();
+// Store the token securely for use in AI requests
+localStorage.setItem("mydva_token", token);
+```
+
+</CodeGroup>
+
+**Successful response** (`200 OK`)
+
+```json
+{
+  "success": true,
+  "message": "Login successfully",
+  "user": {
+    "_id": "665f1a2b3c4d5e6f7a8b9c0d",
+    "FullName": "Priya Sharma",
+    "email": "priya@example.com"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NjVmMWEyYjNjNGQ1ZTZmN2E4YjljMGQiLCJpYXQiOjE3MTc0MDAwMDB9.abc123_signature"
+}
+```
 
 <Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+The JWT is also set as an HTTP-only cookie named `token` (valid for 3 days). If you are using Mydva's web app in the browser, the cookie is sent automatically with every request — you do not need to manage the token manually.
 </Tip>
+
+---
+
+### Take the Dosha Quiz
+
+Submit your physical and lifestyle characteristics to the `/api/v1/analyze-dosha` endpoint. The engine evaluates your inputs across Ayurvedic dimensions and returns exact percentage scores for each of the three Doshas, plus your primary constitution.
+
+Include your JWT token in the `Authorization` header.
+
+**Request body** — key fields
+
+| Field | Type | Description |
+|---|---|---|
+| `body_frame` | string | Your build (e.g. `"slim"`, `"medium"`, `"heavy"`) |
+| `skin_type` | string | Skin tendency (e.g. `"dry"`, `"oily"`, `"combination"`) |
+| `digestion` | string | Digestive pattern (e.g. `"irregular"`, `"sharp"`, `"slow"`) |
+| `sleep_pattern` | string | Sleep quality (e.g. `"light"`, `"moderate"`, `"deep"`) |
+| `mental_tendency` | string | Dominant mental style (e.g. `"anxious"`, `"focused"`, `"calm"`) |
+| `energy_level` | string | Typical energy (e.g. `"variable"`, `"intense"`, `"steady"`) |
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://dva-mybackend-deployment.onrender.com/api/v1/analyze-dosha \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
+  -d '{
+    "body_frame": "slim",
+    "skin_type": "dry",
+    "digestion": "irregular",
+    "sleep_pattern": "light",
+    "mental_tendency": "anxious",
+    "energy_level": "variable"
+  }'
+```
+
+```javascript JavaScript (fetch)
+const token = localStorage.getItem("mydva_token");
+
+const response = await fetch(
+  "https://dva-mybackend-deployment.onrender.com/api/v1/analyze-dosha",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      body_frame: "slim",
+      skin_type: "dry",
+      digestion: "irregular",
+      sleep_pattern: "light",
+      mental_tendency: "anxious",
+      energy_level: "variable",
+    }),
+  }
+);
+
+const doshaResult = await response.json();
+console.log(doshaResult);
+```
+
+</CodeGroup>
+
+**Successful response** (`200 OK`)
+
+```json
+{
+  "success": true,
+  "dosha_scores": {
+    "vata": 58,
+    "pitta": 27,
+    "kapha": 15
+  },
+  "primary_dosha": "Vata",
+  "secondary_dosha": "Pitta",
+  "summary": "Your constitution is primarily Vata with a secondary Pitta influence. You tend toward creativity and quick thinking, but may experience irregular digestion and anxiety when out of balance."
+}
+```
+
+<Note>
+Save your `primary_dosha` value — you will pass it to the consultation endpoint in the next step so the AI can tailor its recommendations to your specific constitution.
+</Note>
+
+---
+
+### Get Your Personalised Consultation
+
+Pass your Dosha profile, medical history, and current symptoms to `/api/v1/personal-consultation`. The Groq Llama 3.3 (70B) model processes your full health picture and returns a custom Ayurvedic health strategy: dietary guidance, specific herb suggestions, and daily routine modifications.
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://dva-mybackend-deployment.onrender.com/api/v1/personal-consultation \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <YOUR_JWT_TOKEN>" \
+  -d '{
+    "primary_dosha": "Vata",
+    "secondary_dosha": "Pitta",
+    "age": 28,
+    "gender": "female",
+    "current_symptoms": ["bloating", "anxiety", "dry skin", "insomnia"],
+    "medical_history": ["IBS"],
+    "lifestyle": {
+      "diet": "vegetarian",
+      "exercise": "light yoga",
+      "stress_level": "high"
+    }
+  }'
+```
+
+```javascript JavaScript (fetch)
+const token = localStorage.getItem("mydva_token");
+
+const response = await fetch(
+  "https://dva-mybackend-deployment.onrender.com/api/v1/personal-consultation",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      primary_dosha: "Vata",
+      secondary_dosha: "Pitta",
+      age: 28,
+      gender: "female",
+      current_symptoms: ["bloating", "anxiety", "dry skin", "insomnia"],
+      medical_history: ["IBS"],
+      lifestyle: {
+        diet: "vegetarian",
+        exercise: "light yoga",
+        stress_level: "high",
+      },
+    }),
+  }
+);
+
+const consultation = await response.json();
+console.log(consultation.recommendations);
+```
+
+</CodeGroup>
+
+**Successful response** (`200 OK`)
+
+```json
+{
+  "success": true,
+  "consultation": {
+    "dietary_plan": {
+      "foods_to_favour": ["warm cooked grains", "ghee", "root vegetables", "sesame oil"],
+      "foods_to_reduce": ["raw salads", "cold drinks", "caffeine", "processed foods"],
+      "meal_timing": "Three warm meals at consistent times; avoid skipping breakfast"
+    },
+    "herbal_recommendations": [
+      { "herb": "Ashwagandha", "purpose": "Reduces anxiety and supports adrenal health" },
+      { "herb": "Triphala", "purpose": "Gently regulates digestion and relieves bloating" },
+      { "herb": "Brahmi", "purpose": "Calms the nervous system and improves sleep quality" }
+    ],
+    "daily_routine": {
+      "morning": "Warm sesame oil self-massage (Abhyanga) before showering",
+      "midday": "Largest meal between 12:00–14:00 when digestive fire (Agni) is strongest",
+      "evening": "Screen-free wind-down from 21:00; warm turmeric milk before bed"
+    },
+    "follow_up": "Consider booking a live consultation to discuss IBS management with a practitioner."
+  }
+}
+```
+
+<Tip>
+The more detail you include about your symptoms, lifestyle, and medical history, the more specific and actionable the AI's recommendations will be. Consider revisiting the consultation endpoint each season, as Ayurveda recognises that your balance shifts with the time of year.
+</Tip>
+
+---
+
+### Explore the Dashboard Features
+
+With your Dosha profile and first consultation in hand, you are ready to explore everything the Mydva dashboard offers. Navigate to the features most relevant to your constitution:
+
+- **`/dashboard`** — your personalised home with a summary of your Dosha profile and today's wellness tips.
+- **`/dashboard/dosha-analysis`** — re-run or refine your Dosha quiz at any time.
+- **`/dashboard/consultation`** — request a new AI consultation or review previous recommendations.
+- **`/dashboard/herbal-remedy`** — browse the interactive 3D herbal remedies library, filtered by your dosha.
+- **`/dashboard/chakras`** — explore the seven chakra energy centres in an immersive 3D environment.
+- **`/dashboard/expert-talk`** — browse practitioner profiles, check availability, and book a live video consultation.
+- **`/dashboard/centers`** — find Ayurvedic wellness centres and Panchakarma clinics near your location.
+- **`/dashboard/education`** — access structured articles, videos, and guides on Ayurvedic principles.
+
+<Warning>
+All dashboard routes are protected — you must be logged in for them to load. If your session expires (tokens are valid for 3 days), simply log in again to receive a fresh JWT.
+</Warning>
+
+</Steps>

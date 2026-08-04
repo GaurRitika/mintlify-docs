@@ -1,13 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "Mydva",
+  "projectType": "saas",
+  "projectName": "Mydva – AyurGuide",
+  "projectDescription": "Mydva (AyurGuide) is a personalized Ayurvedic health platform that combines AI-powered Dosha analysis, 3D herbal and chakra exploration, Groq LLM consultations, and live WebRTC video sessions with certified Ayurvedic practitioners.",
   "theme": "almond",
-  "favicon": "/favicon.svg",
-  "colors": {
-    "primary": "#64defc",
-    "light": "#64defc",
-    "dark": "#2C3E50"
-  },
+  "primaryColor": "#64defc",
+  "lightColor": "#64defc",
+  "darkColor": "#2C3E50",
   "navigation": {
     "tabs": [
       {
@@ -87,10 +85,21 @@
       }
     ]
   },
-  "navbar": {
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/GaurRitika/NCS_AyurGuide"
-    }
-  }
+  "keyFeatures": [
+    "Dosha Analysis Quiz – Multi-dimensional questionnaire computing precise Vata/Pitta/Kapha percentage breakdowns",
+    "AI-Powered Personal Consultation – Groq Llama 3.3-70B generates tailored dietary plans, herbal suggestions, and lifestyle routines",
+    "3D Herbal Remedies Explorer – Interactive Three.js renders of medicinal plants (Ashwagandha, Turmeric, Tulsi, Brahmi, Triphala, Shatavari)",
+    "Interactive 3D Chakra System – All 7 chakras with sacred geometry, mantra players, mudra visualizers, and breathing guides",
+    "Expert Talk – Schedule and conduct live video consultations with certified Ayurvedic doctors via WebRTC",
+    "Wellness Center Directory – Geo-based discovery of Ayurvedic clinics and Panchakarma centers",
+    "Ayurveda Education Hub – Structured articles, videos, and wellness guides",
+    "JWT Authentication – Secure user accounts with HTTP-only cookie sessions"
+  ],
+  "publicApiSurface": [
+    "POST /auth/register",
+    "POST /auth/login",
+    "POST /api/v1/analyze-dosha",
+    "GET /api/v1/recommendations/{dosha_type}",
+    "POST /api/v1/personal-consultation"
+  ]
 }

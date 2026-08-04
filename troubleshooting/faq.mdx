@@ -1,0 +1,116 @@
+---
+title: "Mydva Frequently Asked Questions"
+sidebarTitle: "FAQ"
+description: "Answers to the most common questions about using Mydva — covering Dosha quizzes, AI consultations, video calls, privacy, and browser compatibility."
+---
+
+This page answers the most frequently asked questions from Mydva users. If you are experiencing an unexpected error message rather than a usage question, see the [Common Errors](/troubleshooting/common-errors) guide for a full breakdown of error codes and how to resolve them.
+
+<AccordionGroup>
+  <Accordion title="Why did my Dosha Quiz results return an error?">
+    Dosha Quiz errors almost always fall into one of two categories: a network issue reaching the AI backend, or a problem with the quiz data that was submitted.
+
+    **Check the following:**
+
+    - Make sure you answered every question in the quiz before submitting. The scoring algorithm requires a complete response set; partially answered quizzes can produce a total score of zero, which the API rejects with the message `"Total score cannot be zero"`.
+    - Confirm your internet connection is stable and try reloading the page.
+    - If you are self-hosting Mydva, verify that the Python AI Backend is running at the URL configured in `REACT_APP_AI_API` and that a valid `GROQ_API_KEY` is set in `PythonBackend/.env`.
+
+    If the quiz errors persist after completing all questions and confirming connectivity, try clearing your browser cache and retaking the quiz in a fresh tab.
+  </Accordion>
+
+  <Accordion title='The AI consultation says "Unable to generate recommendations" — what happened?'>
+    This message appears when the Python AI Backend cannot complete a successful call to the Groq LLM. The two most common causes are:
+
+    1. **Invalid or missing Groq API key** — The `GROQ_API_KEY` in `PythonBackend/.env` is absent, expired, or incorrect. Log in to [console.groq.com](https://console.groq.com), verify your key is active, and restart the Python backend after updating `.env`.
+    2. **Groq rate-limit or timeout** — The free Groq tier has per-minute token limits. If you or your server have sent many requests in quick succession, wait 60 seconds and try again.
+
+    If you are using the hosted Mydva service (not self-hosted), the error is likely temporary. Refresh the page and retry your consultation. If the problem persists for more than a few minutes, check the [Mydva status page](https://mydva.example.com/status) or contact support.
+  </Accordion>
+
+  <Accordion title="My video consultation won't connect — how do I fix it?">
+    Video consultations in Mydva use WebRTC, which requires camera and microphone access plus an open network path to the signalling server. Work through these steps in order:
+
+    1. **Check browser permissions.** Click the camera/lock icon in your browser's address bar and ensure both Camera and Microphone are set to **Allow** for the Mydva domain.
+    2. **Use a supported browser.** WebRTC works best in up-to-date versions of Chrome, Edge, or Firefox. Safari has partial support; see the browser compatibility question below for details.
+    3. **Check your network.** Corporate firewalls and strict NAT configurations can block WebRTC traffic. If you are on a work network, try switching to a mobile hotspot to test.
+    4. **Reload the page** once you have granted permissions; some browsers do not apply new permission grants until a page refresh.
+    5. **Restart your browser** if the camera still shows a black screen — another application may have locked the hardware.
+
+    If you continue to experience issues after these steps, contact your Ayurvedic practitioner to reschedule and include your browser version and operating system in the message.
+  </Accordion>
+
+  <Accordion title="How do I reset my password?">
+    On the Mydva login page, click **Forgot Password** beneath the sign-in button. Enter the email address associated with your account and click **Send Reset Link**. You will receive an email with a secure, time-limited link to set a new password.
+
+    A few things to keep in mind:
+
+    - The reset link expires after **1 hour**. If it has expired, return to the login page and request a new one.
+    - Check your spam or junk folder if the email does not appear within a few minutes.
+    - Your new password must be at least 8 characters long.
+
+    If you no longer have access to the email address on your account, contact Mydva support for identity verification assistance.
+  </Accordion>
+
+  <Accordion title="Can I retake the Dosha quiz?">
+    Yes — you can retake the Dosha quiz as many times as you like. Navigate to the **Dosha Analysis** section from the main menu and select **Retake Quiz**. Each submission is analysed independently, and your most recent result becomes your active Dosha profile for AI-generated recommendations.
+
+    Your previous results are not deleted; you can view your quiz history in the **Profile** section under **Health History**. Retaking the quiz after significant lifestyle changes — such as a change of season, diet, or sleep schedule — is encouraged, as your Dosha balance can shift over time.
+  </Accordion>
+
+  <Accordion title="Is my health data private?">
+    Mydva treats your health information with strict confidentiality.
+
+    - **Authentication data** (name, email, password hash) is stored in MongoDB. Passwords are never stored in plain text — they are hashed with bcrypt before being saved.
+    - **Dosha quiz responses and consultation data** are processed by the Python AI backend and used only to generate your personalised recommendations. This data is not sold or shared with third parties.
+    - **Video consultations** occur directly between you and your practitioner over an encrypted WebRTC connection. Session recordings are only created if both parties explicitly consent.
+    - **JWT tokens** are stored as HTTP-only cookies, making them inaccessible to JavaScript running in the page and reducing the risk of cross-site scripting attacks.
+
+    If you would like your account and associated data deleted, contact support and your data will be removed within 30 days in accordance with applicable data protection regulations.
+  </Accordion>
+
+  <Accordion title="What browsers are supported for video consultations?">
+    Video consultations require WebRTC support. The following browsers are fully tested and supported:
+
+    | Browser | Minimum Version | Notes |
+    |---|---|---|
+    | Google Chrome | 90+ | Recommended; best WebRTC performance |
+    | Microsoft Edge | 90+ | Chromium-based; equivalent to Chrome |
+    | Mozilla Firefox | 85+ | Fully supported |
+    | Safari | 15.1+ | Supported on macOS and iOS 15.1+; ensure camera permissions are granted in System Preferences |
+
+    Internet Explorer is not supported. On mobile devices, use Chrome for Android or Safari on iOS for the most reliable experience. If your browser is listed as supported but video still does not connect, ensure it is updated to the latest version.
+  </Accordion>
+
+  <Accordion title="Why does the 3D Chakra Explorer run slowly?">
+    The 3D Chakra Explorer renders interactive WebGL scenes using Three.js and React Three Fiber. Performance depends heavily on your device's GPU and available memory.
+
+    **Common causes and solutions:**
+
+    - **Older or integrated GPU** — The interactive geometry and particle effects require a reasonably capable graphics processor. On devices with integrated graphics (common in budget laptops), reduce quality by opening the Explorer's **Settings** panel and lowering the **Render Quality** slider.
+    - **Too many background browser tabs** — Each tab competes for GPU memory. Close unused tabs before opening the Chakra Explorer.
+    - **Hardware acceleration disabled** — In Chrome, go to `Settings → System` and ensure **Use hardware acceleration when available** is turned on. In Firefox, check `Preferences → General → Performance`.
+    - **Mobile devices** — The 3D Explorer is optimised for desktop. On mobile, a simplified 2D fallback view is available by tapping the **Switch to 2D View** button in the top-right corner of the Explorer.
+
+    Reloading the page after making these adjustments usually yields an immediate improvement.
+  </Accordion>
+
+  <Accordion title="How accurate is the AI consultation?">
+    Mydva's AI consultation feature uses the `llama-3.3-70b-versatile` language model via Groq, guided by structured Ayurvedic principles and your personal Dosha profile, health history, and reported symptoms. The recommendations it generates reflect traditional Ayurvedic dietary, herbal, and lifestyle guidelines.
+
+    **Important:** The AI consultation is an educational and wellness guidance tool, not a substitute for professional medical advice. It does not diagnose diseases, prescribe pharmaceutical treatments, or replace consultation with a licensed healthcare practitioner. Always consult a qualified physician or certified Ayurvedic doctor before making significant changes to your diet, supplements, or health regimen — especially if you have pre-existing medical conditions or are taking prescription medications.
+
+    The quality of recommendations improves when you provide complete and accurate information about your symptoms, lifestyle, and health history during the consultation intake form.
+  </Accordion>
+
+  <Accordion title="Can I use Mydva without an account?">
+    Some areas of Mydva are accessible without logging in, including the educational articles, the Wellness Center Directory, and general information about Ayurveda and the three Doshas. However, the following features require a registered account:
+
+    - Saving and viewing your Dosha quiz results
+    - Accessing personalised AI consultations
+    - Booking and joining video consultations with practitioners
+    - Viewing your health history and past recommendations
+
+    Creating an account is free and takes less than a minute. Visit the [Mydva registration page](https://mydva.example.com/register) and provide your name, email address, and a password to get started.
+  </Accordion>
+</AccordionGroup>

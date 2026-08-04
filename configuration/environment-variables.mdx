@@ -1,0 +1,85 @@
+---
+title: "Environment Variables for Mydva Self-Hosting"
+sidebarTitle: "Env Variables"
+description: "A complete reference for all environment variables required to self-host or develop against the Mydva (AyurGuide) platform across all three services."
+---
+
+Mydva runs as three cooperating services — a React frontend, a Node.js Auth backend, and a Python AI backend — each configured through its own `.env` file. Whether you are self-hosting the full platform or integrating against individual services, you must set the variables below before starting any service. Missing or incorrect values are the most common cause of startup failures and API errors.
+
+## Frontend `.env`
+
+Place this file at `Frontend/.env` in the repository root.
+
+| Variable | Default | Description |
+|---|---|---|
+| `REACT_APP_AUTH_API` | `http://localhost:3000` | Base URL of the Auth backend. All authentication requests (register, login) are sent to this address. |
+| `REACT_APP_AI_API` | `http://localhost:8080/api/v1` | Base URL of the Python AI backend, including the `/api/v1` prefix. Dosha analysis, recommendations, and personal consultations are sent here. |
+
+```env
+# Frontend/.env
+REACT_APP_AUTH_API=http://localhost:3000
+REACT_APP_AI_API=http://localhost:8080/api/v1
+```
+
+When deploying to a remote server, replace the `localhost` values with your publicly accessible domain names or IP addresses — for example, `https://auth.mydva.example.com` and `https://ai.mydva.example.com/api/v1`.
+
+---
+
+## Auth Backend `.env`
+
+Place this file at `AuthBackend/.env`.
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `3000` | The TCP port the Express server listens on. Change this if port 3000 is already in use on your host. |
+| `MONGO_URI` | *(none)* | Full MongoDB connection string. Use `mongodb://localhost:27017/ayurguide` for a local instance, or paste your MongoDB Atlas URI for a cloud-hosted database. |
+| `JWT_SECRET` | *(none)* | A long, random string used to sign and verify JSON Web Tokens. Any user whose token was signed with the old secret will be logged out if you rotate this value. |
+
+```env
+# AuthBackend/.env
+PORT=3000
+MONGO_URI=mongodb://localhost:27017/ayurguide
+JWT_SECRET=replace_with_a_long_random_string
+```
+
+---
+
+## Python AI Backend `.env`
+
+Place this file at `PythonBackend/.env`.
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `8080` | The TCP port the FastAPI/Uvicorn server listens on. Must match the port in `REACT_APP_AI_API` above. |
+| `GROQ_API_KEY` | *(none)* | Your Groq Cloud API key. Required for all AI-powered features including the Dosha consultation and personal health recommendations powered by `llama-3.3-70b-versatile`. |
+
+```env
+# PythonBackend/.env
+PORT=8080
+GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+### Obtaining a Groq API Key
+
+1. Visit [https://console.groq.com](https://console.groq.com) and sign in or create a free account.
+2. Navigate to **API Keys** in the left sidebar.
+3. Click **Create API Key**, give it a descriptive name such as `mydva-local`, and copy the generated key immediately — Groq only shows it once.
+4. Paste the key as the value of `GROQ_API_KEY` in `PythonBackend/.env`.
+
+The free tier provides sufficient quota for development and light personal use. For production workloads, review Groq's rate limits and consider a paid plan.
+
+---
+
+## Security Considerations
+
+<Warning>
+Never commit `JWT_SECRET` or `GROQ_API_KEY` to source control. Add each `.env` file to your `.gitignore` (the repository already includes `.gitignore` entries for these files, but double-check before pushing). If either secret is ever exposed, rotate it immediately: generate a new `JWT_SECRET` and invalidate all active sessions, or revoke and regenerate your Groq API key from the console.
+</Warning>
+
+---
+
+## Running All Three Services
+
+<Note>
+Mydva requires all three services — Auth Backend, Python AI Backend, and Frontend — to be running at the same time for full functionality. Start them in three separate terminal windows or use a process manager such as `pm2` or `concurrently`. The Frontend will load even if one backend is down, but features that depend on the offline service will return errors.
+</Note>

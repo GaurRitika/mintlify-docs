@@ -1,0 +1,265 @@
+---
+title: "POST /auth/login — Authenticate and Get JWT"
+sidebarTitle: "Login"
+description: "Authenticate an existing AyurGuide user with email and password. Returns a signed JWT and sets an HTTP-only cookie valid for three days."
+---
+
+After [registering an account](/api/auth/register), you authenticate by sending your email and password to this endpoint. The server looks up your account, compares the submitted password against the stored bcrypt hash, and — if everything matches — signs a JSON Web Token (JWT) containing your `userId`. The token is returned both in the response body and as an HTTP-only `token` cookie that expires after three days, so browser-based clients are authenticated automatically on subsequent requests.
+
+## Endpoint
+
+| | |
+|---|---|
+| **Base URL** | `https://dva-mybackend-deployment.onrender.com` |
+| **Method** | `POST` |
+| **Path** | `/auth/login` |
+| **Authentication** | None |
+| **Content-Type** | `application/json` |
+
+---
+
+## Request flow
+
+```mermaid
+flowchart TD
+    A([Client]) -->|POST /auth/login\nemail + password| B{Validate fields\nemail · password}
+    B -->|Missing any field| E1([400 — All fields are required])
+    B -->|Both present| C{Find user\nby email in MongoDB}
+    C -->|No document found| E2([400 — No user found, please register])
+    C -->|User found| D{bcrypt.compare\npassword vs stored hash}
+    D -->|Hash mismatch| E3([400 — Invalid Password])
+    D -->|Match| F[Sign JWT\npayload: userId\nsecret: JWT_SECRET]
+    F --> G[Set HTTP-only cookie\nname: token · maxAge: 3 days]
+    G -->|DB / runtime error| E4([500 — Internal server error])
+    G --> H([200 — success: true\nuser object + token])
+```
+
+---
+
+## Request body
+
+<ParamField body="email" type="string" required>
+  The email address used when the account was registered. Used to look up the user document in MongoDB.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  Your account password in plain text. The server compares this against the stored bcrypt hash and never persists the raw value.
+</ParamField>
+
+<Warning>
+  Always send credentials over HTTPS. Submitting a password over an unencrypted connection exposes it to interception.
+</Warning>
+
+---
+
+## Request examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://dva-mybackend-deployment.onrender.com/auth/login \
+  -H "Content-Type: application/json" \
+  -c cookies.txt \
+  -d '{
+    "email": "ritika@example.com",
+    "password": "SecureP@ss123"
+  }'
+```
+
+```javascript JavaScript (fetch)
+const response = await fetch(
+  "https://dva-mybackend-deployment.onrender.com/auth/login",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include", // sends & stores the HTTP-only cookie automatically
+    body: JSON.stringify({
+      email: "ritika@example.com",
+      password: "SecureP@ss123",
+    }),
+  }
+);
+
+const data = await response.json();
+// data.token contains the JWT for use in the Authorization header
+```
+
+</CodeGroup>
+
+---
+
+## Response fields
+
+<ResponseField name="success" type="boolean">
+  `true` when authentication succeeds; `false` on any error.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  A human-readable status message, e.g. `"Login successfully"`.
+</ResponseField>
+
+<ResponseField name="token" type="string">
+  A signed JWT. The payload contains `{ userId: "<MongoDB ObjectId>" }` and the token is signed with the server's `JWT_SECRET`. Include this in the `Authorization` header of subsequent requests that require authentication.
+</ResponseField>
+
+<ResponseField name="user" type="object">
+  The full MongoDB document for the authenticated user.
+
+  <Expandable title="user object fields">
+    <ResponseField name="user._id" type="string">
+      MongoDB ObjectId for the authenticated user.
+    </ResponseField>
+
+    <ResponseField name="user.FullName" type="string">
+      The user's full name as stored in the database.
+    </ResponseField>
+
+    <ResponseField name="user.email" type="string">
+      The user's registered email address.
+    </ResponseField>
+
+    <ResponseField name="user.createdAt" type="string (ISO 8601)">
+      Timestamp of when the account was first created.
+    </ResponseField>
+
+    <ResponseField name="user.updatedAt" type="string (ISO 8601)">
+      Timestamp of the most recent update to the user document.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## HTTP-only cookie
+
+In addition to the `token` field in the JSON body, the server sets a cookie on the response:
+
+| Attribute | Value |
+|---|---|
+| **Name** | `token` |
+| **Value** | Signed JWT (same as `data.token`) |
+| **HttpOnly** | `true` — inaccessible to JavaScript on the client |
+| **Max-Age** | `259 200 000 ms` (3 days) |
+| **Secure** | `false` on the current deployment (HTTP permitted) |
+
+Browser-based clients using `credentials: "include"` (fetch) or `withCredentials: true` (axios) will have this cookie attached automatically to every subsequent request to the same origin, so you do not need to manage the token manually unless you are building a non-browser client.
+
+<Note>
+  The AyurGuide frontend configures `withCredentials: true` via axios, so the cookie is handled transparently for all in-app API calls.
+</Note>
+
+---
+
+## Response examples
+
+### 200 — Login successful
+
+```json
+{
+  "success": true,
+  "message": "Login successfully",
+  "user": {
+    "_id": "664f1a2b3c4d5e6f7a8b9c0d",
+    "FullName": "Ritika Gaur",
+    "email": "ritika@example.com",
+    "createdAt": "2024-05-23T10:45:00.000Z",
+    "updatedAt": "2024-05-23T10:45:00.000Z",
+    "__v": 0
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NjRmMWEyYjNjNGQ1ZTZmN2E4YjljMGQiLCJpYXQiOjE3MTY0NTkxMDB9.abc123signature"
+}
+```
+
+### 400 — Missing required fields
+
+Returned when either `email` or `password` is absent from the request body.
+
+```json
+{
+  "success": false,
+  "message": "All Fields are required"
+}
+```
+
+### 400 — No user found
+
+Returned when the submitted email address does not match any account in the database.
+
+```json
+{
+  "success": false,
+  "message": "No user found in our database , please register"
+}
+```
+
+### 400 — Invalid password
+
+Returned when the email is found but the password does not match the stored bcrypt hash.
+
+```json
+{
+  "success": false,
+  "message": "Invalid Password"
+}
+```
+
+### 500 — Server error
+
+Returned when an unexpected database or runtime error occurs.
+
+```json
+{
+  "success": false,
+  "message": "Internal server error"
+}
+```
+
+---
+
+## Using the token in subsequent requests
+
+Once you have the JWT, attach it to authenticated requests using the `Authorization` header:
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+Or, if your client is browser-based and you called the login endpoint with `credentials: "include"`, the HTTP-only `token` cookie is appended automatically — no header management required.
+
+<CodeGroup>
+
+```bash Authorization header (cURL)
+curl -X GET https://dva-mybackend-deployment.onrender.com/some/protected/route \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+```javascript Automatic cookie (fetch)
+// No extra header needed — the browser attaches the cookie automatically
+const response = await fetch(
+  "https://dva-mybackend-deployment.onrender.com/some/protected/route",
+  {
+    method: "GET",
+    credentials: "include",
+  }
+);
+```
+
+```javascript Authorization header (fetch)
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+
+const response = await fetch(
+  "https://dva-mybackend-deployment.onrender.com/some/protected/route",
+  {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+```
+
+</CodeGroup>
+
+<Note>
+  The JWT payload contains only `{ userId }`. It is signed with the server's `JWT_SECRET` environment variable. Do not store the raw token in `localStorage` if your threat model includes XSS; prefer relying on the HTTP-only cookie instead.
+</Note>
